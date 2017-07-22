@@ -2,6 +2,7 @@ import os
 import email
 import re
 import csv
+from PIL import Image
 from datetime import datetime
 from imaplib import IMAP4, IMAP4_SSL
 from bs4 import BeautifulSoup
@@ -103,7 +104,19 @@ if status == "OK":
                         card_pin = 'N/A'
 
                     # Save a screenshot
-                    browser.save_screenshot(os.path.join(screenshots_dir, card_number + '.png'))
+                    element = browser.find_element_by_xpath('//*[@id="main"]')
+                    location = element.location
+                    size = element.size
+                    screenshot_name = os.path.join(screenshots_dir, card_number + '.png')
+                    browser.save_screenshot(screenshot_name)
+
+                    im = Image.open(screenshot_name)
+                    left = location ['x']
+                    top = location['y']
+                    right =  location['x'] + size['width']
+                    bottom = location['y'] + size['height']
+                    im = im.crop((left, top, right, bottom))
+                    im.save(screenshot_name)
 
                     # Write the details to the CSV
                     csv_writer.writerow([card_amount, card_number, card_pin, card_type, datetime_received, egc_link['href']])
